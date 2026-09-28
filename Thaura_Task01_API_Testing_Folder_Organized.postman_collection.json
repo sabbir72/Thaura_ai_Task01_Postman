@@ -1,0 +1,3488 @@
+{
+	"info": {
+		"_postman_id": "b3eab71e-1575-4c99-b004-08207f1ffd96",
+		"name": "Thaura Task 01 API Testing - Folder Organized",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26742114",
+		"description": "Organized by module. Requests are named Q1-Q63 for traceability with the Excel mapping."
+	},
+	"item": [
+		{
+			"name": "01_Auth_Session",
+			"item": [
+				{
+					"name": "Q1_auth_request_otp",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request OTP API returns success\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"pm.test(\"Response contains OTP sent message\", function () {",
+									"    const response = pm.response.text();",
+									"    pm.expect(response.toLowerCase()).to.include(\"otp\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/request-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"request-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q2_auth_verify_otp",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// ==========================================",
+									"// Get thaura_token from Cookie Jar",
+									"// ==========================================",
+									"",
+									"const cookies = pm.cookies.toObject();",
+									"",
+									"console.log(\"Available cookies:\", Object.keys(cookies));",
+									"",
+									"const thauraToken = cookies.thaura_token;",
+									"",
+									"",
+									"// ==========================================",
+									"// Verify thaura_token Exists",
+									"// ==========================================",
+									"",
+									"pm.test(\"thaura_token cookie should exist\", function () {",
+									"",
+									"    pm.expect(",
+									"        thauraToken,",
+									"        \"thaura_token was not found in Postman Cookie Jar\"",
+									"    ).to.exist;",
+									"",
+									"});",
+									"",
+									"",
+									"// ==========================================",
+									"// Save Current Token to Environment",
+									"// ==========================================",
+									"",
+									"if (thauraToken) {",
+									"",
+									"    pm.environment.set(",
+									"        \"thaura_token\",",
+									"        thauraToken",
+									"    );",
+									"",
+									"    console.log(\"✅ Current thaura_token saved to environment.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{email}}\",\n    \"code\": \"{{otp}}\",\n    \"language\": \"en\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q3_auth_validate_session_before_logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Protected API returns 200 with valid token\", function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response should contain user data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an(\"object\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q4_auth_logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Logout should return 200\", function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Logout should be successful\", function () {",
+									"    const response = pm.response.json();",
+									"",
+									"    pm.expect(response.message).to.equal(\"Logout successful\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// ==========================================",
+									"// Capture Current Token BEFORE Logout",
+									"// ==========================================",
+									"",
+									"const currentToken = pm.environment.get(\"thaura_token\");",
+									"",
+									"if (!currentToken) {",
+									"    throw new Error(\"❌ thaura_token is missing before logout\");",
+									"}",
+									"",
+									"// Save current token as OLD token",
+									"pm.environment.set(",
+									"    \"old_thaura_token\",",
+									"    currentToken",
+									");",
+									"",
+									"console.log(\"✅ Old authentication token captured before logout.\");"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q5_auth_validate_old_token_after_logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Protected API returns 200 with valid token\", function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response should contain user data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an(\"object\");",
+									"});",
+									"",
+									"pm.test(\"Old token should be invalid after logout\", function () {",
+									"    pm.expect([401, 403]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{old_thaura_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02_Chat_Completions_Validation",
+			"item": [
+				{
+					"name": "Q6_chat_completions_valid_request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code should be 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response should be a streaming response\", function () {",
+									"    const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+									"    pm.expect(contentType.toLowerCase()).to.include(\"text/event-stream\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain chat completion data\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"chat.completion.chunk\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain model 'thaura'\", function () {",
+									"    pm.expect(pm.response.text()).to.include('\"model\":\"thaura\"');",
+									"});",
+									"",
+									"pm.test(\"Response should contain [DONE] event\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"data: [DONE]\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain usage information\", function () {",
+									"    const responseText = pm.response.text();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes('\"usage\"')",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"hello\",\n      \"messageId\": \"0f92b3c0c0d6b3\",\n      \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\",\n      \"createdAt\": \"2026-09-17T14:34:19.286Z\"\n    }\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q7_chat_completions_missing_messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should reject request when messages is missing\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate a validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"validation\") ||",
+									"        responseText.includes(\"required\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q8_chat_completions_empty_messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should validate empty messages array\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate invalid messages\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"required\") ||",
+									"        responseText.includes(\"empty\") ||",
+									"        responseText.includes(\"invalid\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q9_chat_completions_missing_role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should validate missing message role\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate a message validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"role\") ||",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"invalid\") ||",
+									"        responseText.includes(\"required\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"content\": \"hello role missing\",\n      \"messageId\": \"0f92b3c0c0d6b3\",\n      \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\",\n      \"createdAt\": \"2026-09-17T14:34:19.286Z\"\n    }\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q10_chat_completions_missing_content",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should validate missing message content\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate a content/message validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"content\") ||",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"invalid\") ||",
+									"        responseText.includes(\"required\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"messageId\": \"0f92b3c0c0d6b3\",\n      \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\",\n      \"createdAt\": \"2026-09-17T14:34:19.286Z\"\n    }\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q11_chat_completions_empty_content",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should validate empty message content\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate a validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"content\") ||",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"invalid\") ||",
+									"        responseText.includes(\"required\") ||",
+									"        responseText.includes(\"empty\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"\",\n      \"messageId\": \"0f92b3c0c0d6b3\",\n      \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\",\n      \"createdAt\": \"2026-09-17T14:34:19.286Z\"\n    }\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q12_chat_completions_invalid_role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should reject invalid message role\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate role validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"role\") ||",
+									"        responseText.includes(\"invalid\") ||",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"validation\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"invalid_role\",\n      \"content\": \"hello\",\n      \"messageId\": \"0f92b3c0c0d6b3\",\n      \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\",\n      \"createdAt\": \"2026-09-17T14:34:19.286Z\"\n    }\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q13_chat_completions_empty_message_object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should reject an empty message object\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate message validation error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"message\") ||",
+									"        responseText.includes(\"role\") ||",
+									"        responseText.includes(\"content\") ||",
+									"        responseText.includes(\"invalid\") ||",
+									"        responseText.includes(\"required\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {}\n  ],\n  \"attachments\": [],\n  \"stream\": true,\n  \"metadata\": {\n    \"messageId\": \"0f92b3c0c0d6b3\",\n    \"chatId\": \"92b92681-bb69-4a4f-8bde-453abfff893c\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q14_chat_completions_stream_omitted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should return a valid HTTP response when stream is omitted\", function () {",
+									"    pm.expect(pm.response.code).to.be.within(200, 499);",
+									"});",
+									"",
+									"pm.test(\"Response should not be an unexpected server error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        !responseText.includes(\"internal_error\") ||",
+									"        responseText.includes(\"stream\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"hi\"\n    }\n  ],\n  \"attachments\": [],\n  \"metadata\": {}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q15_chat_completions_attachments_omitted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should return a valid HTTP response when stream is omitted\", function () {",
+									"    pm.expect(pm.response.code).to.be.within(200, 499);",
+									"});",
+									"",
+									"pm.test(\"Response should not be an unexpected server error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        !responseText.includes(\"internal_error\") ||",
+									"        responseText.includes(\"stream\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"hi\"\n    }\n  ],\n  \"stream\": true,\n  \"metadata\": {}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q16_chat_completions_metadata_omitted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should return a valid HTTP response when stream is omitted\", function () {",
+									"    pm.expect(pm.response.code).to.be.within(200, 499);",
+									"});",
+									"",
+									"pm.test(\"Response should not be an unexpected server error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        !responseText.includes(\"internal_error\") ||",
+									"        responseText.includes(\"stream\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"hi\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q17_chat_completions_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API should return a valid HTTP response when stream is omitted\", function () {",
+									"    pm.expect(pm.response.code).to.be.within(200, 499);",
+									"});",
+									"",
+									"pm.test(\"Response should not be an unexpected server error\", function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        !responseText.includes(\"internal_error\") ||",
+									"        responseText.includes(\"stream\")",
+									"    ).to.be.true;",
+									"});",
+									"",
+									"",
+									"",
+									"",
+									"/*",
+									"Result: ⚠️ Observed Accepted",
+									"",
+									"এখনই এটাকে FAIL বলব না, কারণ API সম্ভবত \"true\" → true হিসেবে coerce করছে। তবে যদি documented contract strictly Boolean require করে, তখন এটি validation issue হতে পারে।",
+									"",
+									"Test note:",
+									"",
+									"The API accepted a string value (\"true\") for the stream parameter and returned HTTP 200 instead of rejecting the request due to an invalid data type. Whether this is a defect depends on the documented type-validation requirement.",
+									"*/"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": \"true\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q18_chat_completions_messages_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": \"Please explain the difference between manual testing and automation testing in simple terms.\",\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q19_chat_completions_role_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": 123,\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q20_chat_completions_content_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": 12345\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q21_chat_completions_stream_null",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": null\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q22_chat_completions_messages_null",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": null,\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q23_chat_completions_attachments_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"attachments\": \"no-attachments\",\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q24_chat_completions_metadata_invalid_data_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns a 4xx validation error', function () { pm.expect(pm.response.code).to.be.within(400, 499); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"metadata\": \"test-metadata\",\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03_Boundary_Parameters_Authentication",
+			"item": [
+				{
+					"name": "Q25_chat_completions_boundary_values",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": true,\n  \"max_completion_tokens\": 32000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q26_chat_completions_max_completion_tokens_zero",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": true,\n  \"max_completion_tokens\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q27_chat_completions_max_completion_tokens_negative",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": true,\n  \"max_completion_tokens\": -1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q28_chat_completions_temperature_negative",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Please explain the difference between manual testing and automation testing in simple terms.\"\n    }\n  ],\n  \"stream\": true,\n  \"temperature\": -1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q29_chat_completions_token_precedence",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain three key differences between manual testing and automation testing.\"\n    }\n  ],\n  \"stream\": true,\n  \"max_tokens\": 10,\n  \"max_completion_tokens\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q30_chat_completions_functions_parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain in simple terms what API testing is and give two examples.\"\n    }\n  ],\n  \"stream\": true,\n  \"functions\": [\n    {\n      \"name\": \"test_function\",\n      \"description\": \"A test function for parameter validation\",\n      \"parameters\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"example\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q31_chat_completions_function_call_parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain in simple terms what API testing is and give two practical examples.\"\n    }\n  ],\n  \"stream\": true,\n  \"function_call\": \"auto\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q32_chat_completions_missing_api_key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain in simple terms what API testing is and give two practical examples.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q33_chat_completions_malformed_api_key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "invalid-api-key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain the difference between authentication and authorization in API testing.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q34_chat_completions_invalid_api_key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "sk-test-invalid-7f82a91c4d",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain the difference between authentication and authorization in API testing with two short examples.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04_Response_Usage_Chat_Edge_Cases",
+			"item": [
+				{
+					"name": "Q35_chat_completions_response_schema_review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain three important API testing practices in simple terms.\"\n    }\n  ],\n  \"stream\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q36_chat_completions_non_streaming_response_schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain three important API testing practices in simple terms.\"\n    }\n  ],\n  \"stream\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q37_chat_completions_usage_accounting",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"List three important practices for reliable API testing and briefly explain each one.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q38_chat_completions_minimal_usage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"List three important practices for reliable API testing and briefly explain each one.\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q39_chat_completions_response_schema_assertions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code should be 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response should be valid JSON\", function () {",
+									"    pm.response.json();",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"",
+									"pm.test(\"Response should contain id\", function () {",
+									"    pm.expect(response).to.have.property(\"id\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain object\", function () {",
+									"    pm.expect(response).to.have.property(\"object\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain created\", function () {",
+									"    pm.expect(response).to.have.property(\"created\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain model\", function () {",
+									"    pm.expect(response).to.have.property(\"model\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain choices\", function () {",
+									"    pm.expect(response).to.have.property(\"choices\");",
+									"    pm.expect(response.choices).to.be.an(\"array\");",
+									"});",
+									"",
+									"pm.test(\"Response should contain usage\", function () {",
+									"    pm.expect(response).to.have.property(\"usage\");",
+									"});",
+									"",
+									"if (response.usage) {",
+									"    pm.test(\"Usage should contain prompt_tokens\", function () {",
+									"        pm.expect(response.usage).to.have.property(\"prompt_tokens\");",
+									"        pm.expect(response.usage.prompt_tokens).to.be.a(\"number\");",
+									"    });",
+									"",
+									"    pm.test(\"Usage should contain completion_tokens\", function () {",
+									"        pm.expect(response.usage).to.have.property(\"completion_tokens\");",
+									"        pm.expect(response.usage.completion_tokens).to.be.a(\"number\");",
+									"    });",
+									"",
+									"    pm.test(\"Usage should contain total_tokens\", function () {",
+									"        pm.expect(response.usage).to.have.property(\"total_tokens\");",
+									"        pm.expect(response.usage.total_tokens).to.be.a(\"number\");",
+									"    });",
+									"",
+									"    pm.test(\"Total tokens should equal prompt + completion tokens\", function () {",
+									"        pm.expect(response.usage.total_tokens)",
+									"            .to.equal(",
+									"                response.usage.prompt_tokens +",
+									"                response.usage.completion_tokens",
+									"            );",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain three important API testing practices and give one practical example for each.\"\n    }\n  ],\n  \"stream\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q40_chat_completions_blank_input",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Blank content should not return a successful response\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Blank content should be rejected\", function () {",
+									"    pm.expect(pm.response.code).not.to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"\"\n    }\n  ],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q41_chat_completions_blank_messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Blank messages array should be rejected\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Blank messages should not return 200\", function () {",
+									"    pm.expect(pm.response.code).not.to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q42_chat_completions_invalid_email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Blank messages array should be rejected\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Blank messages should not return 200\", function () {",
+									"    pm.expect(pm.response.code).not.to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [],\n  \"stream\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "05_User_Profile_Account",
+			"item": [
+				{
+					"name": "Q43_user_profile_invalid_name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response should reject invalid email format\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test(\"Response should indicate email validation error\", function () {",
+									"    const response = pm.response.json();",
+									"",
+									"    const responseText = JSON.stringify(response).toLowerCase();",
+									"",
+									"    pm.expect(",
+									"        responseText.includes(\"email\") ||",
+									"        responseText.includes(\"invalid\")",
+									"    ).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"profile\": {\n    \"name\": \"\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q44_email_change_invalid_email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Valid profile request should be accepted\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"pm.test(\"Response should be valid JSON\", function () {",
+									"    pm.response.json();",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"invalid-email\",\n  \"language\": \"en\"\n}\n"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/request-email-change-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"request-email-change-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q45_email_change_invalid_otp",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Blank OTP should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 401, 422]);\n});\n\npm.test(\"Response should indicate OTP/code validation error\", function () {\n    const response = pm.response.json();\n    const responseText = JSON.stringify(response).toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"otp\") ||\n        responseText.includes(\"code\") ||\n        responseText.includes(\"required\") ||\n        responseText.includes(\"invalid\")\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"sabbir.altersense@gmail.co\",\n  \"code\": \"888888\"\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/confirm-email-change-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"confirm-email-change-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q46_email_change_max_length_overflow",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Over-length email should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 401, 422]);\n});\n\npm.test(\"Response should indicate email/validation error\", function () {\n    const response = pm.response.json();\n    const responseText = JSON.stringify(response).toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"email\") ||\n        responseText.includes(\"length\") ||\n        responseText.includes(\"invalid\") ||\n        responseText.includes(\"validation\")\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com\",\n  \"language\": \"en\"\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/request-email-change-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"request-email-change-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q47_user_avatar_invalid_file_type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Invalid file type should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 415, 422]);\n});\n\npm.test(\"Response should indicate file type validation error\", function () {\n    const response = pm.response.json();\n    const responseText = JSON.stringify(response).toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"file\") ||\n        responseText.includes(\"type\") ||\n        responseText.includes(\"format\") ||\n        responseText.includes(\"invalid\") ||\n        responseText.includes(\"unsupported\")\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/Invoice_ORD-2026-8125.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/avatar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"avatar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q48_user_avatar_oversized_image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Oversized image should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 413, 415, 422]);\n});\n\npm.test(\"Response should indicate file size validation\", function () {\n    const responseText = pm.response.text().toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"size\") ||\n        responseText.includes(\"large\") ||\n        responseText.includes(\"limit\") ||\n        responseText.includes(\"too large\") ||\n        pm.response.code === 413\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "File",
+									"type": "file",
+									"src": "/E:/sabbirs_world/well p/salam 01.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/avatar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"avatar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q49_user_profile_blank_name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Blank name should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 422]);\n});\n\npm.test(\"Response should indicate name validation error\", function () {\n    const responseText = pm.response.text().toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"name\") ||\n        responseText.includes(\"required\") ||\n        responseText.includes(\"invalid\") ||\n        responseText.includes(\"validation\")\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"profile\": {\r\n    \"name\": \"\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q50_user_profile_name_max_length_overflow",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Over-length name should be rejected\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([400, 422]);\n});\n\npm.test(\"Response should indicate name validation\", function () {\n    const responseText = pm.response.text().toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"name\") ||\n        responseText.includes(\"length\") ||\n        responseText.includes(\"maximum\") ||\n        responseText.includes(\"too long\") ||\n        responseText.includes(\"invalid\")\n    ).to.be.true;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"profile\": {\r\n    \"name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "06_Free_Tier_Quota",
+			"item": [
+				{
+					"name": "Q51_free_tier_message_5_quota_boundary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Request should be successful\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\n});\n\npm.test(\"Message should not be rejected by Free-tier limit\", function () {\n    const responseText = pm.response.text().toLowerCase();\n\n    pm.expect(\n        responseText.includes(\"rate_limit_exceeded\") ||\n        responseText.includes(\"limit exceeded\") ||\n        responseText.includes(\"quota exceeded\")\n    ).to.be.false;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Please explain the difference between functional testing and regression testing, with one practical example for each.\",\r\n      \"messageId\": \"q7-msg-5-20260921\",\r\n      \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\",\r\n      \"createdAt\": \"2026-09-21T06:40:00.000Z\"\r\n    }\r\n  ],\r\n  \"attachments\": [],\r\n  \"stream\": false,\r\n  \"metadata\": {\r\n    \"messageId\": \"q7-msg-5-20260921\",\r\n    \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q52_free_tier_quota_reset_behavior",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Quota should be enforced\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([429, 403]);\n});\n\nconst response = pm.response.json();\nconst error = response.error || {};\n\nconst resetAt = error.resetAt || response.resetAt;\n\npm.test(\"resetAt should be present\", function () {\n    pm.expect(resetAt, \"resetAt is missing\").to.exist;\n});\n\nif (resetAt) {\n\n    // ==========================================\n    // 1. Current quota exhausted time\n    // ==========================================\n\n    const exhaustedAt = new Date();\n\n    // ==========================================\n    // 2. Reset timestamp from API\n    // ==========================================\n\n    const resetTime = new Date(resetAt);\n\n    // ==========================================\n    // 3. Calculate remaining time\n    // ==========================================\n\n    const remainingMs = resetTime.getTime() - exhaustedAt.getTime();\n\n    const remainingMinutes = remainingMs / (1000 * 60);\n    const remainingHours = remainingMinutes / 60;\n\n    // ==========================================\n    // 4. Calculate total reset window\n    // ==========================================\n    //\n    // We save the timestamp when quota became\n    // exhausted and compare it with resetAt.\n    //\n\n    const windowHours = remainingHours;\n    const windowMinutes = remainingMinutes;\n\n    // ==========================================\n    // 5. Save values to Postman Environment\n    // ==========================================\n\n    pm.environment.set(\n        \"free_quota_exhausted_at\",\n        exhaustedAt.toISOString()\n    );\n\n    pm.environment.set(\n        \"free_quota_reset_at\",\n        resetTime.toISOString()\n    );\n\n    pm.environment.set(\n        \"free_quota_remaining_minutes\",\n        remainingMinutes.toFixed(2)\n    );\n\n    pm.environment.set(\n        \"free_quota_remaining_hours\",\n        remainingHours.toFixed(2)\n    );\n\n    pm.environment.set(\n        \"free_quota_window_minutes\",\n        windowMinutes.toFixed(2)\n    );\n\n    pm.environment.set(\n        \"free_quota_window_hours\",\n        windowHours.toFixed(2)\n    );\n\n    // ==========================================\n    // 6. Console output\n    // ==========================================\n\n    console.log(\"========== FREE QUOTA RESET ==========\");\n    console.log(\"Quota Exhausted At:\", exhaustedAt.toISOString());\n    console.log(\"Reset At:\", resetTime.toISOString());\n    console.log(\n        \"Remaining Minutes:\",\n        remainingMinutes.toFixed(2)\n    );\n    console.log(\n        \"Remaining Hours:\",\n        remainingHours.toFixed(2)\n    );\n    console.log(\n        \"Calculated Window Hours:\",\n        windowHours.toFixed(2)\n    );\n    console.log(\"=======================================\");\n}\n\n// ==========================================\n// 7. Save API quota information\n// ==========================================\n\nif (error.message) {\n    pm.environment.set(\n        \"free_quota_message\",\n        error.message\n    );\n}\n\nif (error.code) {\n    pm.environment.set(\n        \"free_quota_error_code\",\n        error.code\n    );\n}\n\n// ==========================================\n// 8. Validate expected error\n// ==========================================\n\npm.test(\"Response should indicate rate limit\", function () {\n\n    pm.expect(\n        error.code ||\n        error.type ||\n        error.message\n    ).to.exist;\n});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Please give one concise practical example of how regression testing helps prevent a previously fixed web application defect from returning.\",\r\n      \"messageId\": \"q7-reset-check-20260921\",\r\n      \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\",\r\n      \"createdAt\": \"2026-09-21T06:50:00.000Z\"\r\n    }\r\n  ],\r\n  \"attachments\": [],\r\n  \"stream\": false,\r\n  \"metadata\": {\r\n    \"messageId\": \"q7-reset-check-20260921\",\r\n    \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q53_free_tier_failed_response_consumes_quota",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Request should return an error response\", function () {\n    pm.expect(pm.response.code).to.be.oneOf([\n        400,\n        401,\n        422,\n        500\n    ]);\n});\n\nconst responseText = pm.response.text().toLowerCase();\n\npm.test(\"Response should indicate an error\", function () {\n    pm.expect(\n        responseText.includes(\"error\") ||\n        responseText.includes(\"invalid\") ||\n        responseText.includes(\"validation\") ||\n        responseText.includes(\"role\") ||\n        responseText.includes(\"failed\")\n    ).to.be.true;\n});\n\n// Save failed request information\npm.environment.set(\n    \"q7_failed_request_status\",\n    pm.response.code.toString()\n);\n\npm.environment.set(\n    \"q7_failed_request_time\",\n    new Date().toISOString()\n);\n\npm.environment.set(\n    \"q7_failed_request_response\",\n    pm.response.text()\n);\n\nconsole.log(\"Failed request status:\", pm.response.code);\nconsole.log(\"Failed request time:\", new Date().toISOString());\nconsole.log(\"Failed request response:\", pm.response.text());"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"invalid_role\",\r\n      \"content\": \"Please provide a short explanation of regression testing.\",\r\n      \"messageId\": \"q7-error-msg-5-20260921\",\r\n      \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n    }\r\n  ],\r\n  \"attachments\": [],\r\n  \"stream\": false,\r\n  \"metadata\": {\r\n    \"messageId\": \"q7-error-msg-5-20260921\",\r\n    \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q54_free_tier_quota_after_failed_response",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Please explain in simple terms why regression testing is important after fixing a software defect.\",\r\n      \"messageId\": \"q7-after-error-20260921\",\r\n      \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n    }\r\n  ],\r\n  \"attachments\": [],\r\n  \"stream\": false,\r\n  \"metadata\": {\r\n    \"messageId\": \"q7-after-error-20260921\",\r\n    \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q55_free_tier_direct_api_quota_bypass",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Please explain in simple terms why regression testing is important after fixing a software defect.\",\r\n      \"messageId\": \"q7-direct-api-20260921-58\",\r\n      \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n    }\r\n  ],\r\n  \"attachments\": [],\r\n  \"stream\": false,\r\n  \"metadata\": {\r\n    \"messageId\": \"q7-direct-api-20260921-58\",\r\n    \"chatId\": \"3b171643-2990-47d5-8864-edfb80771fd5\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/chat/completions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "07_File_Upload_Data_Integrity",
+			"item": [
+				{
+					"name": "Q56_file_upload_pdf_data_integrity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const response = pm.response.json();\n\npm.test(\"PDF upload should return 200\", function () {\n    pm.expect(pm.response.code).to.equal(200);\n});\n\npm.test(\"File should be saved successfully\", function () {\n    pm.expect(response.saved).to.equal(true);\n});\n\npm.test(\"Uploaded file should be PDF\", function () {\n    pm.expect(response.mimeType).to.equal(\"application/pdf\");\n});\n\npm.test(\"Correct file name should be returned\", function () {\n    pm.expect(response.fileName).to.equal(\"q3_valid_invoice.pdf\");\n});\n\npm.test(\"Customer name extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"Sabbir Ahmed\");\n});\n\npm.test(\"Invoice number extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"INV-2026-001\");\n});\n\npm.test(\"Invoice date extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"21 September 2026\");\n});\n\npm.test(\"Product extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"Laptop\");\n});\n\npm.test(\"Quantity extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"Quantity: 2\");\n});\n\npm.test(\"Unit price extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"50,000 BDT\");\n});\n\npm.test(\"Total amount extracted correctly\", function () {\n    pm.expect(response.content).to.include(\"100,000 BDT\");\n});\n\n// Save file ID for later tests\nif (response.fileId) {\n    pm.environment.set(\"q3_pdf_file_id\", response.fileId);\n}\n\nconsole.log(\"PDF File ID:\", response.fileId);\nconsole.log(\"Extracted Content:\", response.content);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_valid_invoice.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q57_file_upload_spreadsheet_data_integrity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const response = pm.response.json();\n\npm.test(\"Spreadsheet upload should return 200\", function () {\n    pm.expect(pm.response.code).to.equal(200);\n});\n\npm.test(\"File should be saved successfully\", function () {\n    pm.expect(response.saved).to.equal(true);\n});\n\npm.test(\"Correct spreadsheet file name should be returned\", function () {\n    pm.expect(response.fileName).to.equal(\"q3_valid_spreadsheet.xlsx\");\n});\n\npm.test(\"Extracted content should not be empty\", function () {\n    pm.expect(response.content).to.not.be.empty;\n});\n\npm.test(\"Laptop data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"Laptop\");\n});\n\npm.test(\"Mouse data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"Mouse\");\n});\n\npm.test(\"Keyboard data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"Keyboard\");\n});\n\npm.test(\"Quantity data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"2\");\n});\n\npm.test(\"Price data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"50000\");\n});\n\npm.test(\"Total data should be extracted\", function () {\n    pm.expect(response.content).to.include(\"100000\");\n});\n\nif (response.fileId) {\n    pm.environment.set(\"q3_spreadsheet_file_id\", response.fileId);\n}\n\nconsole.log(\"Spreadsheet Response:\", response);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_valid_spreadsheet.xlsx"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q58_file_upload_image_data_integrity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const response = pm.response.json();\n\npm.test(\"Image upload should return 200\", function () {\n    pm.expect(pm.response.code).to.equal(200);\n});\n\npm.test(\"Image should be saved successfully\", function () {\n    pm.expect(response.saved).to.equal(true);\n});\n\n\n"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/Rongila Ruposhi Logo.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q59_file_upload_corrupted_file",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const responseText = pm.response.text();\n\npm.environment.set(\n    \"q3_corrupted_file_status\",\n    pm.response.code.toString()\n);\n\npm.environment.set(\n    \"q3_corrupted_file_response\",\n    responseText\n);\n\npm.test(\"Corrupted file should not be silently accepted\", function () {\n    pm.expect([400, 415, 422, 500]).to.include(pm.response.code);\n});\n\npm.test(\"Response should contain an error indication\", function () {\n    pm.expect(responseText.toLowerCase()).to.match(\n        /error|invalid|corrupt|failed|unable|unsupported/\n    );\n});\n\nconsole.log(\"Status:\", pm.response.code);\nconsole.log(\"Response:\", responseText);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_corrupted.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q60_file_upload_password_protected_pdf",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const responseText = pm.response.text();\n\npm.environment.set(\n    \"q3_password_pdf_status\",\n    pm.response.code.toString()\n);\n\npm.environment.set(\n    \"q3_password_pdf_response\",\n    responseText\n);\n\npm.test(\"Password-protected PDF should not be silently processed\", function () {\n    pm.expect(pm.response.code).to.not.equal(200);\n});\n\npm.test(\"Response should indicate an error or unsupported/protected file\", function () {\n    pm.expect(responseText.toLowerCase()).to.match(\n        /error|password|protected|encrypted|invalid|unable|failed|unsupported/\n    );\n});\n\nconsole.log(\"Status:\", pm.response.code);\nconsole.log(\"Response:\", responseText);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_password_protected.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q61_file_upload_empty_file",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const responseText = pm.response.text();\n\npm.environment.set(\n    \"q3_empty_file_status\",\n    pm.response.code.toString()\n);\n\npm.environment.set(\n    \"q3_empty_file_response\",\n    responseText\n);\n\npm.test(\"Empty file should not be silently accepted\", function () {\n    pm.expect(pm.response.code).to.not.equal(200);\n});\n\npm.test(\"Response should contain an error indication\", function () {\n    pm.expect(responseText.toLowerCase()).to.match(\n        /error|empty|invalid|zero|size|required|failed/\n    );\n});\n\nconsole.log(\"Status:\", pm.response.code);\nconsole.log(\"Response:\", responseText);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_empty.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q62_file_upload_oversized_file",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const responseText = pm.response.text();\nconst statusCode = pm.response.code;\n\n// Save result for reporting\npm.environment.set(\"q3_oversized_file_status\", statusCode.toString());\npm.environment.set(\"q3_oversized_file_response\", responseText);\n\n// File size from response if available\nlet response = {};\n\ntry {\n    response = pm.response.json();\n} catch (e) {\n    // Response is not JSON\n}\n\n// 1. Oversized file must NOT be accepted\npm.test(\"File larger than 2 GB should be rejected\", function () {\n    pm.expect(statusCode).to.not.equal(200);\n});\n\n// 2. Expected HTTP status\npm.test(\"Oversized file should return proper error status\", function () {\n    pm.expect([400, 413, 415, 422]).to.include(statusCode);\n});\n\n// 3. Error message should be meaningful\npm.test(\"Response should contain file size error information\", function () {\n    const text = responseText.toLowerCase();\n\n    pm.expect(text).to.match(\n        /size|large|limit|maximum|max|exceed|too large|payload/\n    );\n});\n\n// 4. Should not report successful save\npm.test(\"Oversized file should not be saved successfully\", function () {\n    if (response.saved !== undefined) {\n        pm.expect(response.saved).to.not.equal(true);\n    }\n});\n\n// Console evidence\nconsole.log(\"Status:\", statusCode);\nconsole.log(\"Response:\", responseText);\nconsole.log(\"Expected maximum file size: 2 GB\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/WhatsApp Image 2026-02-18 at 10.40.30 AM.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Q63_file_upload_cross_account_data_isolation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const responseText = pm.response.text();\nconst statusCode = pm.response.code;\n\npm.test(\"Other account should not access the file\", function () {\n    pm.expect([401, 403, 404]).to.include(statusCode);\n});\n\npm.test(\"Account A file content should not be exposed\", function () {\n    const text = responseText.toLowerCase();\n\n    pm.expect(text).to.not.include(\"sabbir ahmed\");\n    pm.expect(text).to.not.include(\"inv-2026-001\");\n    pm.expect(text).to.not.include(\"100,000 bdt\");\n});\n\nconsole.log(\"Status:\", statusCode);\nconsole.log(\"Response:\", responseText);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Cookie",
+								"value": "{{thaura_token}}"
+							},
+							{
+								"key": "",
+								"value": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Altersense.DESKTOP-KGFRU8I/Downloads/q3_valid_invoice.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/uploads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"uploads"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
